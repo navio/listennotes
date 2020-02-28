@@ -1,0 +1,26 @@
+{
+  "name": "listennotes",
+  "version": "1.0.0",
+  "description": "API for ListenNotes",
+  "main": "dist/index.js",
+  "module": "dist/listennotes.esm.js",
+  "typings": "dist/index.d.ts",
+  "sideEffects": false,
+  "repository": "https://github.com/navio/listennotes",
+  "author": "Alberto Navarro",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "microbundle",
+    "dev": "microbundle watch"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "openapi-client-axios": "^3.3.2"
+  },
+  "devDependencies": {
+    "microbundle": "^0.11.0"
+  }
+}
