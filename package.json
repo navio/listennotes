@@ -1,6 +1,6 @@
 {
   "name": "listennotes",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "API for ListenNotes",
   "main": "dist/index.js",
   "module": "dist/listennotes.esm.js",
