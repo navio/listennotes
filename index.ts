@@ -1,6 +1,7 @@
 import OpenAPIClientAxios, { Document } from 'openapi-client-axios';
-
+import { OperationMethods } from './client';
 const listenNotesURL = "./listennotes.json";
+
 
 export interface ListennotesConfigs {
   definition?: string | Document;
@@ -10,25 +11,25 @@ export interface ListennotesConfigs {
 };
 
 export default async function getListenNotesAPI(configs: ListennotesConfigs = {}) {
-  const { definition = listenNotesURL, 
-          withCredentials = false,
-          headers = {},
-          key = null,
-        } = configs;
-  
+
+  const { definition = listenNotesURL,
+    withCredentials = false,
+    headers = {},
+    key = null,
+  } = configs;
+
   const extraHeaders = {
     common: headers
   }
-  
-  if(key) extraHeaders.common["X-ListenAPI-Key"] = key; 
-  
+
+  if (key) extraHeaders.common["X-ListenAPI-Key"] = key;
+
   const axiosConfigDefaults = {
-       withCredentials,
-       headers: extraHeaders
+    withCredentials,
+    headers: extraHeaders
   };
 
   const api = new OpenAPIClientAxios({ definition, axiosConfigDefaults });
-  api.init();
-  const client = await api.getClient();
+  const client = api.init<OperationMethods>();
   return client;
 }
