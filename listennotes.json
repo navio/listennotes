@@ -1,0 +1,2714 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "Listen API: Podcast Search & Directory API",
+    "description" : "Simple & no-nonsense podcast search & directory API. Search all podcasts and episodes by people, places, or topics.\n",
+    "termsOfService" : "https://www.listennotes.com/api/#terms",
+    "contact" : {
+      "name" : "Listen Notes",
+      "url" : "https://www.listennotes.com/api/",
+      "email" : "hello@listennotes.com"
+    },
+    "version" : "2.0"
+  },
+  "servers" : [ {
+    "url" : "https://listen-api.listennotes.com/api/v2",
+    "description" : "API Production Server"
+  } ],
+  "tags" : [ {
+    "name" : "Search API",
+    "description" : "Endpoints to search podcasts"
+  }, {
+    "name" : "Directory API",
+    "description" : "Endpoints to fetch podcasts data"
+  }, {
+    "name" : "Podcaster API",
+    "description" : "Endpoints to improve the podcast database"
+  } ],
+  "paths" : {
+    "/search" : {
+      "get" : {
+        "tags" : [ "Search API" ],
+        "summary" : "Full-text search",
+        "description" : "Full-text search on episodes, podcasts, or curated lists of podcasts.",
+        "operationId" : "search",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "q",
+          "in" : "query",
+          "description" : "Search term, e.g., person, place, topic... You can use double quotes to do verbatim match, e.g., \"game of thrones\". Otherwise, it's fuzzy search.\n",
+          "required" : true,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "example" : "star wars"
+          }
+        }, {
+          "name" : "sort_by_date",
+          "in" : "query",
+          "description" : "Sort by date or not? If 0, then sort by relevance. If 1, then sort by date.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 0,
+            "default" : 0,
+            "enum" : [ 0, 1 ]
+          }
+        }, {
+          "name" : "type",
+          "in" : "query",
+          "description" : "What type of contents do you want to search for? \n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "example" : "episode",
+            "default" : "episode",
+            "enum" : [ "episode", "podcast", "curated" ]
+          }
+        }, {
+          "name" : "offset",
+          "in" : "query",
+          "description" : "Offset for search results, for pagination. You'll use **next_offset** from response for this parameter.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 0,
+            "default" : 0
+          }
+        }, {
+          "name" : "len_min",
+          "in" : "query",
+          "description" : "Minimum audio length in minutes. Applicable only when type parameter is **episode**.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 10,
+            "default" : 0
+          }
+        }, {
+          "name" : "len_max",
+          "in" : "query",
+          "description" : "Maximum audio length in minutes. Applicable only when type parameter is **episode**.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 30
+          }
+        }, {
+          "name" : "genre_ids",
+          "in" : "query",
+          "description" : "A comma-delimited string of a list of genre ids. If not specified, then all genres are included. You can find the id and the name of all genres from `GET /genres`. It works only when **type** is *episode* or *podcast*.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "example" : "68,82"
+          }
+        }, {
+          "name" : "published_before",
+          "in" : "query",
+          "description" : "Only show episodes/podcasts/curated lists published before this timestamp (in milliseconds). If **published_before** & **published_after** are used at the same time, **published_before** should be bigger than **published_after**.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 1580172454000
+          }
+        }, {
+          "name" : "published_after",
+          "in" : "query",
+          "description" : "Only show episodes/podcasts/curated lists published after this timestamp (in milliseconds). If **published_before** & **published_after** are used at the same time, **published_before** should be bigger than **published_after**.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 0,
+            "default" : 0
+          }
+        }, {
+          "name" : "only_in",
+          "in" : "query",
+          "description" : "A comma-delimited string to search only in specific fields. Allowed values are title, description, author, and audio. If not specified, then search every fields.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "example" : "title,description",
+            "default" : "title,description,author,audio"
+          }
+        }, {
+          "name" : "language",
+          "in" : "query",
+          "description" : "Limit search results to a specific language. If not specified, it'll be any language. You can get a list of supported languages from `GET /languages`. It works only when **type** is *episode* or *podcast*.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "example" : "English"
+          }
+        }, {
+          "name" : "ocid",
+          "in" : "query",
+          "description" : "A podcast id (the **podcast_id** field in response). This parameter is to limit search results in a specific podcast. It works only when **type** is *episode*.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "ncid",
+          "in" : "query",
+          "description" : "A podcast id (the **podcast_id** field in response). This parameter is to exclude search results from a specific podcast. It works only when **type** is *episode*.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "safe_mode",
+          "in" : "query",
+          "description" : "Whether or not to exclude podcasts/episodes with explicit language. 1 is yes and 0 is no. It works only when **type** is *episode* or *podcast*.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 1,
+            "default" : 0,
+            "enum" : [ 0, 1 ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SearchResponse"
+                }
+              }
+            },
+            "links" : {
+              "paginate" : {
+                "operationId" : "search",
+                "parameters" : {
+                  "offset" : "$response.body#/next_offset"
+                },
+                "description" : "Pagination through search results."
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/typeahead" : {
+      "get" : {
+        "tags" : [ "Search API" ],
+        "summary" : "Typeahead search",
+        "description" : "Suggest search terms, podcast genres, and podcasts.",
+        "operationId" : "typeahead",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "q",
+          "in" : "query",
+          "description" : "Search term, e.g., person, place, topic... You can use double quotes to do verbatim match, e.g., \"game of thrones\". Otherwise, it's fuzzy search.\n",
+          "required" : true,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "example" : "star wars"
+          }
+        }, {
+          "name" : "show_podcasts",
+          "in" : "query",
+          "description" : "Autosuggest podcasts. This only searches podcast title and publisher and returns very limited info of 5 podcasts. 1 is yes, 0 is no. It's a bit slow to autosuggest podcasts, so we turn it off by default. If show_podcasts=1, you can also pass iTunes id (e.g., 474722933) to the q parameter to fetch podcast meta data.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 1,
+            "default" : 0,
+            "enum" : [ 0, 1 ]
+          }
+        }, {
+          "name" : "show_genres",
+          "in" : "query",
+          "description" : "Whether or not to autosuggest genres. 1 is yes, 0 is no.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 1,
+            "default" : 0,
+            "enum" : [ 0, 1 ]
+          }
+        }, {
+          "name" : "safe_mode",
+          "in" : "query",
+          "description" : "Whether or not to exclude podcasts/episodes with explicit language. 1 is yes and 0 is no. It works only when **show_podcasts** is *1*.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 1,
+            "default" : 0,
+            "enum" : [ 0, 1 ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TypeaheadResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/best_podcasts" : {
+      "get" : {
+        "tags" : [ "Directory API" ],
+        "summary" : "Fetch a list of best podcasts by genre",
+        "description" : "Get a list of curated best podcasts by genre. You can get the genre ids from `GET /genres` endpoint.\nThis endpoint returns same data as https://www.listennotes.com/best-podcasts/\n",
+        "operationId" : "getBestPodcasts",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "genre_id",
+          "in" : "query",
+          "description" : "You can get the id from `GET /genres`. If not specified, it'll be the overall best podcasts, which can be considered as a special genre.",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "example" : "93"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Page number of those podcasts in this genre.",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 2
+          }
+        }, {
+          "name" : "region",
+          "in" : "query",
+          "description" : "Filter best podcasts by country/region. You can get the supported country codes from `GET /regions`.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "example" : "us",
+            "default" : "us"
+          }
+        }, {
+          "name" : "safe_mode",
+          "in" : "query",
+          "description" : "Whether or not to exclude podcasts with explicit language. 1 is yes, and 0 is no.",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 1,
+            "default" : 0,
+            "enum" : [ 0, 1 ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BestPodcastsResponse"
+                }
+              }
+            },
+            "links" : {
+              "paginate" : {
+                "operationId" : "getBestPodcasts",
+                "parameters" : {
+                  "page" : "$response.body#/next_page_number"
+                },
+                "description" : "Pagination through podcasts."
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "404" : {
+            "description" : "Endpoint not exist, or podcast / episode not exist"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/podcasts/{id}" : {
+      "get" : {
+        "tags" : [ "Directory API" ],
+        "summary" : "Fetch detailed meta data and episodes for a podcast by id",
+        "description" : "Fetch detailed meta data and episodes for a specific podcast (up to 10 episodes each time).\nYou can use the **next_episode_pub_date** parameter to do pagination and fetch more episodes.\n",
+        "operationId" : "getPodcastById",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Podcast id. You can get podcast id from using other endpoints, e.g., `GET /search`, `GET /best_podcasts`...",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "4d3fe717742d4963a85562e9f84d8c79"
+        }, {
+          "name" : "next_episode_pub_date",
+          "in" : "query",
+          "description" : "For episodes pagination. It's the value of **next_episode_pub_date** from the response of last request. If not specified, just return latest 10 episodes or oldest 10 episodes, depending on the value of the **sort** parameter.\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer"
+          },
+          "example" : 1479154463000
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "How do you want to sort the episodes of this podcast?\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "default" : "recent_first",
+            "enum" : [ "recent_first", "oldest_first" ]
+          },
+          "example" : "recent_first"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PodcastFull"
+                }
+              }
+            },
+            "links" : {
+              "paginate" : {
+                "operationId" : "getPodcastById",
+                "parameters" : {
+                  "next_episode_pub_date" : "$response.body#/next_episode_pub_date"
+                },
+                "description" : "Pagination through episodes."
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "404" : {
+            "description" : "Endpoint not exist, or podcast / episode not exist"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/episodes/{id}" : {
+      "get" : {
+        "tags" : [ "Directory API" ],
+        "summary" : "Fetch detailed meta data for an episode by id",
+        "description" : "Fetch detailed meta data for a specific episode.",
+        "operationId" : "getEpisodeById",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "description" : "id for a specific episode. You can get episode id from using other endpoints, e.g., `GET /search`...",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "02f0123246c944e289ee2bb90804e41b"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EpisodeFull"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "404" : {
+            "description" : "Endpoint not exist, or podcast / episode not exist"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/episodes" : {
+      "post" : {
+        "tags" : [ "Directory API" ],
+        "summary" : "Batch fetch basic meta data for episodes",
+        "description" : "Batch fetch basic meta data for up to 10 episodes. This endpoint could be used to implement custom playlists for individual episodes. For detailed meta data of an individual episode, you need to use `GET /episodes/{id}`.\n",
+        "operationId" : "getEpisodesInBatch",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/x-www-form-urlencoded" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/GetEpisodesInBatchForm"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetEpisodesInBatchResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/podcasts" : {
+      "post" : {
+        "tags" : [ "Directory API" ],
+        "summary" : "Batch fetch basic meta data for podcasts",
+        "description" : "Batch fetch basic meta data for up to 10 podcasts.\nThis endpoint could be used to build something like OPML import,\nallowing users to import a bunch of podcasts via rss urls.\nFor detailed meta data (including episodes) of an individual podcast, you need to use `GET /podcasts/{id}`.\n",
+        "operationId" : "getPodcastsInBatch",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/x-www-form-urlencoded" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/GetPodcastsInBatchForm"
+              }
+            }
+          },
+          "required" : false
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetPodcastsInBatchResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/curated_podcasts/{id}" : {
+      "get" : {
+        "tags" : [ "Directory API" ],
+        "summary" : "Fetch a curated list of podcasts by id",
+        "description" : "Get detailed meta data of all podcasts in a specific curated list.\nThis endpoint returns same data as https://www.listennotes.com/curated-podcasts/\n",
+        "operationId" : "getCuratedPodcastById",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "description" : "id for a specific curated list of podcasts. You can get the id from the response of `GET /search?type=curated` or `GET /curated_podcasts`.\n",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "SDFKduyJ47r"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CuratedListFull"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "404" : {
+            "description" : "Endpoint not exist, or podcast / episode not exist"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/genres" : {
+      "get" : {
+        "tags" : [ "Directory API" ],
+        "summary" : "Fetch a list of podcast genres",
+        "description" : "Get a list of podcast genres that are supported in Listen Notes.\nThe genre id can be passed to other endpoints as a parameter to get podcasts in a specific genre,\ne.g., `GET /best_podcasts`, `GET /search`...\nYou may want to cache the list of genres on the client side.\n",
+        "operationId" : "getGenres",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetGenresResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/regions" : {
+      "get" : {
+        "tags" : [ "Directory API" ],
+        "summary" : "Fetch a list of supported countries/regions for best podcasts",
+        "description" : "It returns a dictionary of country codes (e.g., us, gb...) & country names (United States, United Kingdom...). The country code is used in the query parameter **region** of `GET /best_podcasts`.\n",
+        "operationId" : "getRegions",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetRegionsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/languages" : {
+      "get" : {
+        "tags" : [ "Directory API" ],
+        "summary" : "Fetch a list of supported languages for podcasts",
+        "description" : "Get a list of languages that are supported in Listen Notes database. You can use the language string as query parameter in `GET /search`.\n",
+        "operationId" : "getLanguages",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetLanguagesResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/just_listen" : {
+      "get" : {
+        "tags" : [ "Directory API" ],
+        "summary" : "Fetch a random podcast episode",
+        "description" : "Recently published episodes are more likely to be fetched. Good luck!",
+        "operationId" : "justListen",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EpisodeSimple"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/curated_podcasts" : {
+      "get" : {
+        "tags" : [ "Directory API" ],
+        "summary" : "Fetch curated lists of podcasts",
+        "description" : "A bunch of curated lists from online media. For each list, you'll get basic info of up to 5 podcasts. To get detailed meta data of all podcasts in a specific list, you need to use `GET /curated_podcasts/{id}`. We add new curated lists to the database on a daily basis.\n",
+        "operationId" : "getCuratedPodcasts",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Page number of curated lists.",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "default" : 1
+          },
+          "example" : 2
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetCuratedPodcastsResponse"
+                }
+              }
+            },
+            "links" : {
+              "paginate" : {
+                "operationId" : "getBestPodcasts",
+                "parameters" : {
+                  "page" : "$response.body#/next_page_number"
+                },
+                "description" : "Pagination through curated lists."
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/podcasts/{id}/recommendations" : {
+      "get" : {
+        "tags" : [ "Directory API" ],
+        "summary" : "Fetch recommendations for a podcast",
+        "description" : "Fetch up to 8 podcast recommendations based on the given podcast id.",
+        "operationId" : "getPodcastRecommendations",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Podcast id.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "25212ac3c53240a880dd5032e547047b"
+        }, {
+          "name" : "safe_mode",
+          "in" : "query",
+          "description" : "Whether or not to exclude podcasts with explicit language. 1 is yes, and 0 is no.",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 1,
+            "default" : 0,
+            "enum" : [ 0, 1 ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetPodcastRecommendationsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "404" : {
+            "description" : "Endpoint not exist, or podcast / episode not exist"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/episodes/{id}/recommendations" : {
+      "get" : {
+        "tags" : [ "Directory API" ],
+        "summary" : "Fetch recommendations for an episode",
+        "description" : "Fetch up to 8 episode recommendations based on the given episode id.",
+        "operationId" : "getEpisodeRecommendations",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Episode id.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "914a9deafa5340eeaa2859c77f275799"
+        }, {
+          "name" : "safe_mode",
+          "in" : "query",
+          "description" : "Whether or not to exclude podcasts with explicit language. 1 is yes, and 0 is no.",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "integer",
+            "example" : 1,
+            "default" : 0,
+            "enum" : [ 0, 1 ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetEpisodeRecommendationsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "404" : {
+            "description" : "Endpoint not exist, or podcast / episode not exist"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    },
+    "/podcasts/submit" : {
+      "post" : {
+        "tags" : [ "Podcaster API" ],
+        "summary" : "Submit a podcast to Listen Notes database",
+        "description" : "Podcast hosting services can use this endpoint to help your users directly submit a new podcast to Listen Notes database. If the podcast doesn't exist in the database, \"status\" in the response will be \"in review\", and we'll review it within 12 hours. If you specify the \"email\" parameter, we'll send a notification to this email once the podcast is accepted. If the podcast exist in the database, \"status\" in the response will be \"found\". You can use `POST /podcasts` to check if multiple podcasts exist in the database.\n",
+        "operationId" : "submitPodcast",
+        "parameters" : [ {
+          "name" : "X-ListenAPI-Key",
+          "in" : "header",
+          "description" : "Get API Key on listennotes.com/api",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/x-www-form-urlencoded" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SubmitPodcastForm"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-ListenAPI-FreeQuota" : {
+                "$ref" : "#/components/headers/X-ListenAPI-FreeQuota"
+              },
+              "X-ListenAPI-Usage" : {
+                "$ref" : "#/components/headers/X-ListenAPI-Usage"
+              },
+              "X-listenAPI-Latency-Seconds" : {
+                "$ref" : "#/components/headers/X-listenAPI-Latency-Seconds"
+              },
+              "X-ListenAPI-NextBillingDate" : {
+                "$ref" : "#/components/headers/X-ListenAPI-NextBillingDate"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SubmitPodcastResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Wrong api key or your account is suspended"
+          },
+          "429" : {
+            "description" : "You are using FREE plan and you exceed the quota limit"
+          },
+          "5XX" : {
+            "description" : "Unexpected server errors"
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "EpisodeSearchResult" : {
+        "type" : "object",
+        "properties" : {
+          "audio" : {
+            "$ref" : "#/components/schemas/AudioField"
+          },
+          "audio_length_sec" : {
+            "$ref" : "#/components/schemas/AudioLengthSecField"
+          },
+          "rss" : {
+            "$ref" : "#/components/schemas/RssField"
+          },
+          "description_highlighted" : {
+            "type" : "string",
+            "description" : "Highlighted segment of this episode's description",
+            "example" : "...Go to http://Patreon.com/sw7x7 to donate to the <span class=\"ln-search-highlight\">Star</span> <span class=\"ln-search-highlight\">Wars</span> 7x7 podcast, and you'll get some fabulous rewards for your pledge.***  Check out SW7x7.com for full <span class=\"ln-search-highlight\">Star</span> <span class=\"ln-search-highlight\">Wars</span> 7x7 show notes and links, and to\n"
+          },
+          "description_original" : {
+            "type" : "string",
+            "description" : "Plain text of this episode's description",
+            "example" : "Yeah, Star Wars Celebration Orlando is 32 days away, but what's the scoop on Celebration 2018? Plus, Rebels Day is Saturday, and much more in our update. Punch it! ***We're listener supported! Go to http://Patreon.com/sw7x7 to donate to the Star Wars 7x7 podcast, and youâ€™ll get some fabulous rewards for your pledge.***  Check out SW7x7.com for full Star Wars 7x7 show notes and links, and to comment on any of the content of this episode! If you like what you've heard, please leave us a rating or review on iTunes or Stitcher, which will also help more people discover this Star Wars podcast. Don't forget to join the Star Wars 7x7 fun on Facebook at Facebook.com/SW7x7, and follow the breaking news Twitter feed at Twitter.com/SW7x7Podcast. We're also on Pinterest and Instagram as \"SW7x7\" too, and we'd love to connect with you there!\n"
+          },
+          "title_highlighted" : {
+            "type" : "string",
+            "description" : "Highlighted segment of this episode's title",
+            "example" : "815: <span class=\"ln-search-highlight\">Star</span> <span class=\"ln-search-highlight\">Wars</span> 2020 Movie and Beyond!"
+          },
+          "title_original" : {
+            "type" : "string",
+            "description" : "Plain text of this episode' title",
+            "example" : "815: Star Wars 2020 Movie and Beyond!"
+          },
+          "podcast_title_highlighted" : {
+            "$ref" : "#/components/schemas/PodcastTitleHighlightedField"
+          },
+          "podcast_title_original" : {
+            "$ref" : "#/components/schemas/PodcastTitleOriginalField"
+          },
+          "publisher_highlighted" : {
+            "$ref" : "#/components/schemas/PublisherHighlightedField"
+          },
+          "publisher_original" : {
+            "$ref" : "#/components/schemas/PublisherOriginalField"
+          },
+          "transcripts_highlighted" : {
+            "type" : "array",
+            "description" : "Up to 2 highlighted segments of the audio transcript of this episode.",
+            "items" : {
+              "type" : "string",
+              "example" : "00:21:27  when Disney bought the <span class=\"ln-search-highlight\">Star</span> <span class=\"ln-search-highlight\">Wars</span> franchise from George Lucas they had a plan lots of <span class=\"ln-search-highlight\">Star</span> <span class=\"ln-search-highlight\">Wars</span> movies new <span class=\"ln-search-highlight\">Star</span> <span class=\"ln-search-highlight\">Wars</span> movies every month another one was just released while I was talking\n"
+            }
+          },
+          "image" : {
+            "$ref" : "#/components/schemas/ImageField"
+          },
+          "thumbnail" : {
+            "$ref" : "#/components/schemas/ThumbnailField"
+          },
+          "itunes_id" : {
+            "$ref" : "#/components/schemas/iTunesIdField"
+          },
+          "pub_date_ms" : {
+            "$ref" : "#/components/schemas/EpisodePubDateMsField"
+          },
+          "id" : {
+            "$ref" : "#/components/schemas/EpisodeIdField"
+          },
+          "podcast_id" : {
+            "$ref" : "#/components/schemas/PodcastIdField"
+          },
+          "genre_ids" : {
+            "$ref" : "#/components/schemas/GenreIdsField"
+          },
+          "listennotes_url" : {
+            "$ref" : "#/components/schemas/EpisodeLNUrlField"
+          },
+          "podcast_listennotes_url" : {
+            "$ref" : "#/components/schemas/PodcastLNUrlField"
+          },
+          "explicit_content" : {
+            "$ref" : "#/components/schemas/ExplicitField"
+          },
+          "link" : {
+            "$ref" : "#/components/schemas/LinkField"
+          }
+        },
+        "description" : "When **type** is *episode*."
+      },
+      "PodcastSearchResult" : {
+        "type" : "object",
+        "properties" : {
+          "rss" : {
+            "$ref" : "#/components/schemas/RssField"
+          },
+          "description_highlighted" : {
+            "type" : "string",
+            "description" : "Highlighted segment of podcast description",
+            "example" : "...Join host Allen Voivod for <span class=\"ln-search-highlight\">Star</span> <span class=\"ln-search-highlight\">Wars</span> news, history, interviews, trivia, and deep dives into the <span class=\"ln-search-highlight\">Star</span> <span class=\"ln-search-highlight\">Wars</span> story as told in movies, books, comics, games, cartoons, and more.\n"
+          },
+          "description_original" : {
+            "type" : "string",
+            "description" : "Plain text of podcast description",
+            "example" : "The Star Wars 7x7 Podcast is Rebel-rousing fun for everyday Jedi, between 7 and 14 minutes a day, 7 days a week. Join host Allen Voivod for Star Wars news, history, interviews, trivia, and deep dives into the Star Wars story as told in movies, books, comics, games, cartoons, and more. Subscribe now for your daily dose of Star Wars joy. It's destiny unleashed! #SW7x7\n"
+          },
+          "title_highlighted" : {
+            "$ref" : "#/components/schemas/PodcastTitleHighlightedField"
+          },
+          "title_original" : {
+            "$ref" : "#/components/schemas/PodcastTitleOriginalField"
+          },
+          "publisher_highlighted" : {
+            "$ref" : "#/components/schemas/PublisherHighlightedField"
+          },
+          "publisher_original" : {
+            "$ref" : "#/components/schemas/PublisherOriginalField"
+          },
+          "image" : {
+            "$ref" : "#/components/schemas/ImageField"
+          },
+          "thumbnail" : {
+            "$ref" : "#/components/schemas/ThumbnailField"
+          },
+          "itunes_id" : {
+            "$ref" : "#/components/schemas/iTunesIdField"
+          },
+          "latest_pub_date_ms" : {
+            "$ref" : "#/components/schemas/LatestPubDateMsField"
+          },
+          "earliest_pub_date_ms" : {
+            "$ref" : "#/components/schemas/EarliestPubDateMsField"
+          },
+          "id" : {
+            "$ref" : "#/components/schemas/PodcastIdField"
+          },
+          "genre_ids" : {
+            "$ref" : "#/components/schemas/GenreIdsField"
+          },
+          "listennotes_url" : {
+            "$ref" : "#/components/schemas/PodcastLNUrlField"
+          },
+          "total_episodes" : {
+            "$ref" : "#/components/schemas/TotalEpisodesField"
+          },
+          "email" : {
+            "$ref" : "#/components/schemas/EmailField"
+          },
+          "explicit_content" : {
+            "$ref" : "#/components/schemas/ExplicitField"
+          },
+          "website" : {
+            "$ref" : "#/components/schemas/WebsiteField"
+          }
+        },
+        "description" : "When **type** is *podcast*."
+      },
+      "CuratedListSearchResult" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/CuratedIdField"
+          },
+          "pub_date_ms" : {
+            "$ref" : "#/components/schemas/CuratedPubDateMsField"
+          },
+          "description_highlighted" : {
+            "type" : "string",
+            "description" : "Highlighted segment of this curated list's description",
+            "example" : "...<span class=\"ln-search-highlight\">Star</span> <span class=\"ln-search-highlight\">Wars</span> fans in Reddit shared their favorite podcasts."
+          },
+          "description_original" : {
+            "type" : "string",
+            "description" : "Plain text of this curated list's description",
+            "example" : "Star Wars fans in Reddit shared their favorite podcasts."
+          },
+          "title_highlighted" : {
+            "type" : "string",
+            "description" : "Highlighted segment of this curated list's title",
+            "example" : "What are some good <span class=\"ln-search-highlight\">Star</span> <span class=\"ln-search-highlight\">Wars</span> Podcast to listen to?\n"
+          },
+          "title_original" : {
+            "type" : "string",
+            "description" : "Plain text of this curated list's title",
+            "example" : "What are some good Star Wars Podcast to listen to?"
+          },
+          "listennotes_url" : {
+            "$ref" : "#/components/schemas/CuratedLNUrlField"
+          },
+          "source_url" : {
+            "$ref" : "#/components/schemas/CuratedSourceUrlField"
+          },
+          "source_domain" : {
+            "$ref" : "#/components/schemas/CuratedSourceDomainField"
+          },
+          "podcasts" : {
+            "type" : "array",
+            "description" : "Up to 5 podcasts in this curated list.",
+            "items" : {
+              "$ref" : "#/components/schemas/PodcastMinimum"
+            }
+          }
+        },
+        "description" : "When **type** is *curated*."
+      },
+      "Genre" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "description" : "Genre id",
+            "example" : 93
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Genre name.",
+            "example" : "Business"
+          },
+          "parent_id" : {
+            "type" : "integer",
+            "description" : "Parent genre id.",
+            "example" : 95
+          }
+        },
+        "example" : {
+          "id" : 140,
+          "parent_id" : 127,
+          "name" : "Web Design"
+        }
+      },
+      "PodcastTypeaheadResult" : {
+        "type" : "object",
+        "properties" : {
+          "publisher_highlighted" : {
+            "$ref" : "#/components/schemas/PublisherHighlightedField"
+          },
+          "publisher_original" : {
+            "$ref" : "#/components/schemas/PublisherOriginalField"
+          },
+          "explicit_content" : {
+            "$ref" : "#/components/schemas/ExplicitField"
+          },
+          "image" : {
+            "$ref" : "#/components/schemas/ImageField"
+          },
+          "thumbnail" : {
+            "$ref" : "#/components/schemas/ThumbnailField"
+          },
+          "title_highlighted" : {
+            "$ref" : "#/components/schemas/PodcastTitleHighlightedField"
+          },
+          "title_original" : {
+            "$ref" : "#/components/schemas/PodcastTitleOriginalField"
+          },
+          "id" : {
+            "$ref" : "#/components/schemas/PodcastIdField"
+          }
+        }
+      },
+      "PodcastMinimum" : {
+        "type" : "object",
+        "properties" : {
+          "image" : {
+            "$ref" : "#/components/schemas/ImageField"
+          },
+          "thumbnail" : {
+            "$ref" : "#/components/schemas/ThumbnailField"
+          },
+          "title" : {
+            "$ref" : "#/components/schemas/PodcastNameField"
+          },
+          "listennotes_url" : {
+            "$ref" : "#/components/schemas/PodcastLNUrlField"
+          },
+          "id" : {
+            "$ref" : "#/components/schemas/PodcastIdField"
+          },
+          "publisher" : {
+            "$ref" : "#/components/schemas/PublisherField"
+          }
+        }
+      },
+      "PodcastSimple" : {
+        "type" : "object",
+        "properties" : {
+          "is_claimed" : {
+            "$ref" : "#/components/schemas/IsClaimedField"
+          },
+          "explicit_content" : {
+            "$ref" : "#/components/schemas/ExplicitField"
+          },
+          "website" : {
+            "$ref" : "#/components/schemas/WebsiteField"
+          },
+          "total_episodes" : {
+            "$ref" : "#/components/schemas/TotalEpisodesField"
+          },
+          "earliest_pub_date_ms" : {
+            "$ref" : "#/components/schemas/EarliestPubDateMsField"
+          },
+          "rss" : {
+            "$ref" : "#/components/schemas/RssField"
+          },
+          "latest_pub_date_ms" : {
+            "$ref" : "#/components/schemas/LatestPubDateMsField"
+          },
+          "title" : {
+            "$ref" : "#/components/schemas/PodcastNameField"
+          },
+          "language" : {
+            "$ref" : "#/components/schemas/LanguageField"
+          },
+          "description" : {
+            "$ref" : "#/components/schemas/PodcastDescriptionField"
+          },
+          "email" : {
+            "$ref" : "#/components/schemas/EmailField"
+          },
+          "image" : {
+            "$ref" : "#/components/schemas/ImageField"
+          },
+          "thumbnail" : {
+            "$ref" : "#/components/schemas/ThumbnailField"
+          },
+          "listennotes_url" : {
+            "$ref" : "#/components/schemas/PodcastLNUrlField"
+          },
+          "id" : {
+            "$ref" : "#/components/schemas/PodcastIdField"
+          },
+          "country" : {
+            "$ref" : "#/components/schemas/CountryField"
+          },
+          "publisher" : {
+            "$ref" : "#/components/schemas/PublisherField"
+          },
+          "itunes_id" : {
+            "$ref" : "#/components/schemas/iTunesIdField"
+          },
+          "looking_for" : {
+            "$ref" : "#/components/schemas/PodcastLookingForField"
+          },
+          "extra" : {
+            "$ref" : "#/components/schemas/PodcastExtraField"
+          },
+          "genre_ids" : {
+            "$ref" : "#/components/schemas/GenreIdsField"
+          }
+        }
+      },
+      "PodcastFull" : {
+        "type" : "object",
+        "properties" : {
+          "episodes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EpisodeMinimum"
+            }
+          },
+          "is_claimed" : {
+            "$ref" : "#/components/schemas/IsClaimedField"
+          },
+          "explicit_content" : {
+            "$ref" : "#/components/schemas/ExplicitField"
+          },
+          "website" : {
+            "$ref" : "#/components/schemas/WebsiteField"
+          },
+          "total_episodes" : {
+            "$ref" : "#/components/schemas/TotalEpisodesField"
+          },
+          "earliest_pub_date_ms" : {
+            "$ref" : "#/components/schemas/EarliestPubDateMsField"
+          },
+          "rss" : {
+            "$ref" : "#/components/schemas/RssField"
+          },
+          "latest_pub_date_ms" : {
+            "$ref" : "#/components/schemas/LatestPubDateMsField"
+          },
+          "title" : {
+            "$ref" : "#/components/schemas/PodcastNameField"
+          },
+          "language" : {
+            "$ref" : "#/components/schemas/LanguageField"
+          },
+          "description" : {
+            "$ref" : "#/components/schemas/PodcastDescriptionField"
+          },
+          "email" : {
+            "$ref" : "#/components/schemas/EmailField"
+          },
+          "image" : {
+            "$ref" : "#/components/schemas/ImageField"
+          },
+          "thumbnail" : {
+            "$ref" : "#/components/schemas/ThumbnailField"
+          },
+          "listennotes_url" : {
+            "$ref" : "#/components/schemas/PodcastLNUrlField"
+          },
+          "id" : {
+            "$ref" : "#/components/schemas/PodcastIdField"
+          },
+          "country" : {
+            "$ref" : "#/components/schemas/CountryField"
+          },
+          "publisher" : {
+            "$ref" : "#/components/schemas/PublisherField"
+          },
+          "itunes_id" : {
+            "$ref" : "#/components/schemas/iTunesIdField"
+          },
+          "looking_for" : {
+            "$ref" : "#/components/schemas/PodcastLookingForField"
+          },
+          "extra" : {
+            "$ref" : "#/components/schemas/PodcastExtraField"
+          },
+          "genre_ids" : {
+            "$ref" : "#/components/schemas/GenreIdsField"
+          },
+          "next_episode_pub_date" : {
+            "$ref" : "#/components/schemas/NextEpisodePubDateField"
+          }
+        }
+      },
+      "EpisodeMinimum" : {
+        "type" : "object",
+        "properties" : {
+          "maybe_audio_invalid" : {
+            "$ref" : "#/components/schemas/MaybeAudioInvalidField"
+          },
+          "pub_date_ms" : {
+            "$ref" : "#/components/schemas/EpisodePubDateMsField"
+          },
+          "audio" : {
+            "$ref" : "#/components/schemas/AudioField"
+          },
+          "listennotes_edit_url" : {
+            "$ref" : "#/components/schemas/EpisodeLNEditUrlField"
+          },
+          "image" : {
+            "$ref" : "#/components/schemas/ImageField"
+          },
+          "thumbnail" : {
+            "$ref" : "#/components/schemas/ThumbnailField"
+          },
+          "description" : {
+            "$ref" : "#/components/schemas/EpisodeDescriptionField"
+          },
+          "title" : {
+            "$ref" : "#/components/schemas/EpisodeNameField"
+          },
+          "explicit_content" : {
+            "$ref" : "#/components/schemas/ExplicitField"
+          },
+          "listennotes_url" : {
+            "$ref" : "#/components/schemas/EpisodeLNUrlField"
+          },
+          "audio_length_sec" : {
+            "$ref" : "#/components/schemas/AudioLengthSecField"
+          },
+          "id" : {
+            "$ref" : "#/components/schemas/EpisodeIdField"
+          },
+          "link" : {
+            "$ref" : "#/components/schemas/LinkField"
+          }
+        }
+      },
+      "EpisodeSimple" : {
+        "type" : "object",
+        "properties" : {
+          "maybe_audio_invalid" : {
+            "$ref" : "#/components/schemas/MaybeAudioInvalidField"
+          },
+          "pub_date_ms" : {
+            "$ref" : "#/components/schemas/EpisodePubDateMsField"
+          },
+          "audio" : {
+            "$ref" : "#/components/schemas/AudioField"
+          },
+          "listennotes_edit_url" : {
+            "$ref" : "#/components/schemas/EpisodeLNEditUrlField"
+          },
+          "image" : {
+            "$ref" : "#/components/schemas/ImageField"
+          },
+          "thumbnail" : {
+            "$ref" : "#/components/schemas/ThumbnailField"
+          },
+          "description" : {
+            "$ref" : "#/components/schemas/EpisodeDescriptionField"
+          },
+          "title" : {
+            "$ref" : "#/components/schemas/EpisodeNameField"
+          },
+          "explicit_content" : {
+            "$ref" : "#/components/schemas/ExplicitField"
+          },
+          "listennotes_url" : {
+            "$ref" : "#/components/schemas/EpisodeLNUrlField"
+          },
+          "audio_length_sec" : {
+            "$ref" : "#/components/schemas/AudioLengthSecField"
+          },
+          "id" : {
+            "$ref" : "#/components/schemas/EpisodeIdField"
+          },
+          "podcast_id" : {
+            "$ref" : "#/components/schemas/PodcastIdField"
+          },
+          "podcast_title" : {
+            "$ref" : "#/components/schemas/PodcastNameField"
+          },
+          "publisher" : {
+            "$ref" : "#/components/schemas/PublisherField"
+          },
+          "link" : {
+            "$ref" : "#/components/schemas/LinkField"
+          }
+        }
+      },
+      "EpisodeFull" : {
+        "type" : "object",
+        "properties" : {
+          "maybe_audio_invalid" : {
+            "$ref" : "#/components/schemas/MaybeAudioInvalidField"
+          },
+          "pub_date_ms" : {
+            "$ref" : "#/components/schemas/EpisodePubDateMsField"
+          },
+          "audio" : {
+            "$ref" : "#/components/schemas/AudioField"
+          },
+          "listennotes_edit_url" : {
+            "$ref" : "#/components/schemas/EpisodeLNEditUrlField"
+          },
+          "image" : {
+            "$ref" : "#/components/schemas/ImageField"
+          },
+          "thumbnail" : {
+            "$ref" : "#/components/schemas/ThumbnailField"
+          },
+          "description" : {
+            "$ref" : "#/components/schemas/EpisodeDescriptionField"
+          },
+          "title" : {
+            "$ref" : "#/components/schemas/EpisodeNameField"
+          },
+          "explicit_content" : {
+            "$ref" : "#/components/schemas/ExplicitField"
+          },
+          "listennotes_url" : {
+            "$ref" : "#/components/schemas/EpisodeLNUrlField"
+          },
+          "audio_length_sec" : {
+            "$ref" : "#/components/schemas/AudioLengthSecField"
+          },
+          "id" : {
+            "$ref" : "#/components/schemas/EpisodeIdField"
+          },
+          "podcast" : {
+            "$ref" : "#/components/schemas/PodcastSimple"
+          },
+          "link" : {
+            "$ref" : "#/components/schemas/LinkField"
+          }
+        }
+      },
+      "CuratedListFull" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/CuratedIdField"
+          },
+          "description" : {
+            "$ref" : "#/components/schemas/CuratedDescriptionField"
+          },
+          "source_url" : {
+            "$ref" : "#/components/schemas/CuratedSourceUrlField"
+          },
+          "source_domain" : {
+            "$ref" : "#/components/schemas/CuratedSourceDomainField"
+          },
+          "pub_date_ms" : {
+            "$ref" : "#/components/schemas/CuratedPubDateMsField"
+          },
+          "listennotes_url" : {
+            "$ref" : "#/components/schemas/CuratedLNUrlField"
+          },
+          "title" : {
+            "$ref" : "#/components/schemas/CuratedNameField"
+          },
+          "podcasts" : {
+            "type" : "array",
+            "description" : "Complete meta data of all podcasts in this curated list.",
+            "items" : {
+              "$ref" : "#/components/schemas/PodcastSimple"
+            }
+          }
+        }
+      },
+      "CuratedListSimple" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/CuratedIdField"
+          },
+          "description" : {
+            "$ref" : "#/components/schemas/CuratedDescriptionField"
+          },
+          "source_url" : {
+            "$ref" : "#/components/schemas/CuratedSourceUrlField"
+          },
+          "source_domain" : {
+            "$ref" : "#/components/schemas/CuratedSourceDomainField"
+          },
+          "pub_date_ms" : {
+            "$ref" : "#/components/schemas/CuratedPubDateMsField"
+          },
+          "listennotes_url" : {
+            "$ref" : "#/components/schemas/CuratedLNUrlField"
+          },
+          "title" : {
+            "$ref" : "#/components/schemas/CuratedNameField"
+          },
+          "podcasts" : {
+            "type" : "array",
+            "description" : "Minimum meta data of up to 5 podcasts in this curated list.",
+            "items" : {
+              "$ref" : "#/components/schemas/PodcastMinimum"
+            }
+          }
+        }
+      },
+      "SearchResponse" : {
+        "type" : "object",
+        "properties" : {
+          "next_offset" : {
+            "type" : "integer",
+            "description" : "Pass this value to the **offset** parameter to do pagination of search results.",
+            "example" : 10
+          },
+          "took" : {
+            "type" : "number",
+            "description" : "The time it took to fetch these search results. In seconds.",
+            "example" : 0.093
+          },
+          "total" : {
+            "type" : "integer",
+            "description" : "The total number of search results.",
+            "example" : 1989
+          },
+          "count" : {
+            "type" : "integer",
+            "description" : "The number of search results in this page.",
+            "example" : 10
+          },
+          "results" : {
+            "type" : "array",
+            "description" : "A list of search results.",
+            "items" : {
+              "oneOf" : [ {
+                "$ref" : "#/components/schemas/EpisodeSearchResult"
+              }, {
+                "$ref" : "#/components/schemas/PodcastSearchResult"
+              }, {
+                "$ref" : "#/components/schemas/CuratedListSearchResult"
+              } ]
+            }
+          }
+        }
+      },
+      "TypeaheadResponse" : {
+        "required" : [ "terms" ],
+        "type" : "object",
+        "properties" : {
+          "terms" : {
+            "type" : "array",
+            "description" : "Search term suggestions.",
+            "example" : [ "startup sales", "startup", "startups", "star wars" ],
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "genres" : {
+            "type" : "array",
+            "description" : "Genre suggestions. It'll show up when the **show_genres** parameter is *1*.",
+            "items" : {
+              "$ref" : "#/components/schemas/Genre"
+            }
+          },
+          "podcasts" : {
+            "type" : "array",
+            "description" : "Podcast suggestions. It'll show up when the **show_podcasts** parameter is 1.",
+            "items" : {
+              "$ref" : "#/components/schemas/PodcastTypeaheadResult"
+            }
+          }
+        }
+      },
+      "BestPodcastsResponse" : {
+        "required" : [ "has_next", "has_previous", "id", "listennotes_url", "name", "next_page_number", "page_number", "parent_id", "podcasts", "previous_page_number", "total" ],
+        "type" : "object",
+        "properties" : {
+          "has_previous" : {
+            "type" : "boolean"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "This genre's name.",
+            "example" : "Business News"
+          },
+          "listennotes_url" : {
+            "$ref" : "#/components/schemas/BestPodcastsLNUrlField"
+          },
+          "previous_page_number" : {
+            "type" : "integer",
+            "example" : 1
+          },
+          "page_number" : {
+            "type" : "integer",
+            "example" : 2
+          },
+          "has_next" : {
+            "type" : "boolean",
+            "example" : true
+          },
+          "next_page_number" : {
+            "type" : "integer",
+            "example" : 3
+          },
+          "parent_id" : {
+            "type" : "integer",
+            "description" : "The id of parent genre.",
+            "example" : 93
+          },
+          "id" : {
+            "type" : "integer",
+            "description" : "The id of this genre",
+            "example" : 95
+          },
+          "total" : {
+            "type" : "integer",
+            "example" : 325
+          },
+          "podcasts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PodcastSimple"
+            }
+          }
+        }
+      },
+      "GetEpisodesInBatchForm" : {
+        "required" : [ "ids" ],
+        "type" : "object",
+        "properties" : {
+          "ids" : {
+            "type" : "string",
+            "description" : "Comma-separated list of episode ids.",
+            "example" : "c577d55b2b2b483c969fae3ceb58e362,0f34a9099579490993eec9e8c8cebb82"
+          }
+        }
+      },
+      "GetEpisodesInBatchResponse" : {
+        "required" : [ "episodes" ],
+        "type" : "object",
+        "properties" : {
+          "episodes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EpisodeSimple"
+            }
+          }
+        }
+      },
+      "GetPodcastsInBatchForm" : {
+        "type" : "object",
+        "properties" : {
+          "ids" : {
+            "type" : "string",
+            "description" : "Comma-separated list of podcast ids.",
+            "example" : "3302bc71139541baa46ecb27dbf6071a,68faf62be97149c280ebcc25178aa731,37589a3e121e40debe4cef3d9638932a,9cf19c590ff0484d97b18b329fed0c6a"
+          },
+          "rsses" : {
+            "type" : "string",
+            "description" : "Comma-separated rss urls.",
+            "example" : "https://rss.art19.com/recode-decode,https://rss.art19.com/the-daily,https://www.npr.org/rss/podcast.php?id=510331,https://www.npr.org/rss/podcast.php?id=510331"
+          },
+          "itunes_ids" : {
+            "type" : "string",
+            "description" : "Comma-separated itunes ids.",
+            "example" : "1457514703,1386234384,659155419"
+          },
+          "show_latest_episodes" : {
+            "type" : "integer",
+            "description" : "Whether or not to fetch up to 10 latest episodes from these podcasts, sorted by pub_date. 1 is yes, and 0 is no.\n",
+            "example" : 1,
+            "default" : 0,
+            "enum" : [ 0, 1 ]
+          }
+        }
+      },
+      "GetPodcastsInBatchResponse" : {
+        "required" : [ "podcasts" ],
+        "type" : "object",
+        "properties" : {
+          "podcasts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PodcastSimple"
+            }
+          },
+          "latest_episodes" : {
+            "type" : "array",
+            "description" : "Up to 10 latest episodes from these podcasts, sorted by **pub_date**. This field shows up only when **show_latest_episodes** is 1.\n",
+            "items" : {
+              "$ref" : "#/components/schemas/EpisodeSimple"
+            }
+          }
+        }
+      },
+      "GetGenresResponse" : {
+        "required" : [ "genres" ],
+        "type" : "object",
+        "properties" : {
+          "genres" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Genre"
+            }
+          }
+        }
+      },
+      "GetRegionsResponse" : {
+        "required" : [ "regions" ],
+        "type" : "object",
+        "properties" : {
+          "regions" : {
+            "type" : "object",
+            "example" : {
+              "de" : "Germany",
+              "us" : "United States",
+              "au" : "Australia",
+              "ua" : "Ukraine"
+            }
+          }
+        }
+      },
+      "GetLanguagesResponse" : {
+        "required" : [ "languages" ],
+        "type" : "object",
+        "properties" : {
+          "languages" : {
+            "type" : "array",
+            "example" : [ "Any language", "Afar", "Abkhazian", "Afrikaans", "Akan", "Albanian", "Arabic", "Azerbaijani", "Bambara", "Bashkir", "Basque", "Belarusian", "Bulgarian", "Catalan", "Chamorro", "Chinese", "Croatian", "Czech", "Danish", "Dutch", "English", "Estonian", "Faeroese", "Finnish", "French", "Gaelic", "Galician", "German", "Greek" ],
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "GetCuratedPodcastsResponse" : {
+        "required" : [ "curated_lists", "has_next", "has_previous", "next_page_number", "page_number", "previous_page_number", "total" ],
+        "type" : "object",
+        "properties" : {
+          "has_previous" : {
+            "type" : "boolean",
+            "example" : true
+          },
+          "previous_page_number" : {
+            "type" : "integer",
+            "example" : 1
+          },
+          "page_number" : {
+            "type" : "integer",
+            "example" : 2
+          },
+          "next_page_number" : {
+            "type" : "integer",
+            "example" : 3
+          },
+          "has_next" : {
+            "type" : "boolean",
+            "example" : true
+          },
+          "total" : {
+            "type" : "integer",
+            "example" : 25
+          },
+          "curated_lists" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CuratedListSimple"
+            }
+          }
+        }
+      },
+      "GetPodcastRecommendationsResponse" : {
+        "required" : [ "recommendations" ],
+        "type" : "object",
+        "properties" : {
+          "recommendations" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PodcastSimple"
+            }
+          }
+        }
+      },
+      "GetEpisodeRecommendationsResponse" : {
+        "required" : [ "recommendations" ],
+        "type" : "object",
+        "properties" : {
+          "recommendations" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EpisodeSimple"
+            }
+          }
+        }
+      },
+      "SubmitPodcastForm" : {
+        "required" : [ "rss" ],
+        "type" : "object",
+        "properties" : {
+          "rss" : {
+            "type" : "string",
+            "description" : "A valid podcast rss url",
+            "example" : "https://feeds.megaphone.fm/committed"
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "A valid email address. If **email** is specified, then we'll notify this email address once the podcast is accepted.",
+            "example" : "hello@example.com"
+          }
+        }
+      },
+      "SubmitPodcastResponse" : {
+        "required" : [ "podcast", "status" ],
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string",
+            "description" : "The status of this submission.",
+            "example" : "found",
+            "enum" : [ "found", "in review" ]
+          },
+          "podcast" : {
+            "$ref" : "#/components/schemas/PodcastMinimum"
+          }
+        }
+      },
+      "PodcastLookingForField" : {
+        "type" : "object",
+        "properties" : {
+          "cohosts" : {
+            "type" : "boolean",
+            "description" : "Whether this podcast is looking for cohosts.",
+            "example" : true
+          },
+          "cross_promotion" : {
+            "type" : "boolean",
+            "description" : "Whether this podcast is looking for cross promotion opportunities with other podcasts.",
+            "example" : true
+          },
+          "sponsors" : {
+            "type" : "boolean",
+            "description" : "Whether this podcast is looking for sponsors.",
+            "example" : true
+          },
+          "guests" : {
+            "type" : "boolean",
+            "description" : "Whether this podcast is looking for guests.",
+            "example" : true
+          }
+        }
+      },
+      "PodcastExtraField" : {
+        "type" : "object",
+        "properties" : {
+          "youtube_url" : {
+            "type" : "string",
+            "description" : "YouTube url affiliated with this podcast",
+            "example" : "https://www.youtube.com/sw7x7"
+          },
+          "facebook_handle" : {
+            "type" : "string",
+            "description" : "Facebook username affiliated with this podcast",
+            "example" : "sw7x7"
+          },
+          "instagram_handle" : {
+            "type" : "string",
+            "description" : "Instagram username affiliated with this podcast",
+            "example" : "sw7x7"
+          },
+          "twitter_handle" : {
+            "type" : "string",
+            "description" : "Twitter username affiliated with this podcast",
+            "example" : "SW7x7podcast"
+          },
+          "wechat_handle" : {
+            "type" : "string",
+            "description" : "WeChat username affiliated with this podcast"
+          },
+          "patreon_handle" : {
+            "type" : "string",
+            "description" : "Patreon username affiliated with this podcast",
+            "example" : "sw7x7"
+          },
+          "google_url" : {
+            "type" : "string",
+            "description" : "Google Podcasts url for this podcast",
+            "example" : "https://play.google.com/music/listen?u=0#/ps/I7gdcrqcmvhfnhh2cyqkcg32tkq"
+          },
+          "linkedin_url" : {
+            "type" : "string",
+            "description" : "LinkedIn url affiliated with this podcast"
+          },
+          "spotify_url" : {
+            "type" : "string",
+            "description" : "Spotify url for this podcast",
+            "example" : "https://open.spotify.com/show/2rQJUP9Y3HxemiW3JHt9WV"
+          },
+          "url1" : {
+            "type" : "string",
+            "description" : "Url affiliated with this podcast"
+          },
+          "url2" : {
+            "type" : "string",
+            "description" : "Url affiliated with this podcast"
+          },
+          "url3" : {
+            "type" : "string",
+            "description" : "Url affiliated with this podcast"
+          }
+        }
+      },
+      "AudioField" : {
+        "type" : "string",
+        "description" : "Audio url of this episode, which can be played directly.",
+        "example" : "https://www.listennotes.com/e/p/11b34041e804491b9704d11f283c74de/"
+      },
+      "LinkField" : {
+        "type" : "string",
+        "description" : "Web link of this episode.",
+        "example" : "https://www.npr.org/2020/01/22/798532179/soleimanis-iran"
+      },
+      "WebsiteField" : {
+        "type" : "string",
+        "description" : "Website url of this podcast.",
+        "example" : "http://sw7x7.com/"
+      },
+      "IsClaimedField" : {
+        "type" : "boolean",
+        "description" : "Whether this podcast is claimed by its producer on [ListenNotes.com](https://www.ListenNotes.com).",
+        "example" : true
+      },
+      "LanguageField" : {
+        "type" : "string",
+        "description" : "The language of this podcast. You can get all supported languages from `GET /languages`.",
+        "example" : "English"
+      },
+      "CountryField" : {
+        "type" : "string",
+        "description" : "The country where this podcast is produced.",
+        "example" : "United States"
+      },
+      "PublisherField" : {
+        "type" : "string",
+        "description" : "Podcast publisher name.",
+        "example" : "Planet Broadcasting"
+      },
+      "MaybeAudioInvalidField" : {
+        "type" : "boolean",
+        "description" : "Whether or not this episode's audio is invalid. Podcasters may delete the original audio.",
+        "example" : false
+      },
+      "AudioLengthSecField" : {
+        "type" : "integer",
+        "description" : "Audio length of this episode. In seconds.",
+        "example" : 567
+      },
+      "TotalEpisodesField" : {
+        "type" : "integer",
+        "description" : "Total number of episodes in this podcast.",
+        "example" : 324
+      },
+      "ImageField" : {
+        "type" : "string",
+        "description" : "Image url for this podcast's artwork. If you are using PRO plan, then it's\na high resolution image (1400x1400). If you are using FREE plan, then it's the same as **thumbnail**,\nlow resolution image (300x300).\n",
+        "example" : "https://cdn-images-1.listennotes.com/podcasts/exponent-ben-thompson-james-allworth-OaJSjb4xQv3.1400x1400.jpg"
+      },
+      "ThumbnailField" : {
+        "type" : "string",
+        "description" : "Thumbnail image url for this podcast's artwork (300x300).",
+        "example" : "https://cdn-images-1.listennotes.com/podcasts/exponent-ben-thompson-james-allworth-OaJSjb4xQv3.300x300.jpg"
+      },
+      "RssField" : {
+        "type" : "string",
+        "description" : "RSS url of this podcast.",
+        "example" : "https://www.listennotes.com/c/r/4d3fe717742d4963a85562e9f84d8c79/"
+      },
+      "EmailField" : {
+        "type" : "string",
+        "description" : "The email of this podcast's producer",
+        "example" : "hello@example.com"
+      },
+      "iTunesIdField" : {
+        "type" : "integer",
+        "description" : "iTunes id for this podcast.",
+        "example" : 896354638
+      },
+      "EpisodePubDateMsField" : {
+        "type" : "integer",
+        "description" : "Published date for this episode. In millisecond.",
+        "example" : 1474873200000
+      },
+      "CuratedPubDateMsField" : {
+        "type" : "integer",
+        "description" : "Published date of this curated list. In milliseconds.",
+        "example" : 1556843484301
+      },
+      "LatestPubDateMsField" : {
+        "type" : "integer",
+        "description" : "The published date of the latest episode of this podcast. In milliseconds",
+        "example" : 1557499770000
+      },
+      "EarliestPubDateMsField" : {
+        "type" : "integer",
+        "description" : "The published date of the oldest episode of this podcast. In milliseconds",
+        "example" : 1470667902000
+      },
+      "NextEpisodePubDateField" : {
+        "type" : "integer",
+        "description" : "Passed to the **next_episode_pub_date** parameter of `GET /podcasts/{id}` to paginate through episodes of that podcast.",
+        "example" : 1470667902000
+      },
+      "PodcastNameField" : {
+        "type" : "string",
+        "description" : "Podcast name.",
+        "example" : "Star Wars 7x7 | Star Wars News, Interviews, and More!"
+      },
+      "EpisodeNameField" : {
+        "type" : "string",
+        "description" : "Episode name.",
+        "example" : "Celebration Recap, Jason Fry and Christian Blauvelt Interviews – SWBW #101"
+      },
+      "CuratedNameField" : {
+        "type" : "string",
+        "description" : "Curated list name.",
+        "example" : "7 Bookish Podcasts for Avid Readers On the Go"
+      },
+      "EpisodeIdField" : {
+        "type" : "string",
+        "description" : "Episode id.",
+        "example" : "4d82e50314174754a3b603912448e812"
+      },
+      "PodcastIdField" : {
+        "type" : "string",
+        "description" : "Podcast id.",
+        "example" : "4d3fe717742d4963a85562e9f84d8c79"
+      },
+      "CuratedIdField" : {
+        "type" : "string",
+        "description" : "Curated list id.",
+        "example" : "Vb017Sx3l8F"
+      },
+      "ExplicitField" : {
+        "type" : "boolean",
+        "description" : "Whether this podcast contains explicit language.",
+        "example" : false
+      },
+      "GenreIdsField" : {
+        "type" : "array",
+        "example" : [ 138, 86, 160, 68, 82, 100, 101 ],
+        "items" : {
+          "type" : "integer",
+          "description" : "Genre ids."
+        }
+      },
+      "EpisodeLNUrlField" : {
+        "type" : "string",
+        "description" : "The url of this episode on [ListenNotes.com](https://www.ListenNotes.com).",
+        "example" : "https://www.listennotes.com/e/4d82e50314174754a3b603912448e812/"
+      },
+      "EpisodeLNEditUrlField" : {
+        "type" : "string",
+        "description" : "Edit url of this episode where you can update the audio url if you find the audio is broken.",
+        "example" : "https://www.listennotes.com/e/11b34041e804491b9704d11f283c74de/#edit"
+      },
+      "PodcastLNUrlField" : {
+        "type" : "string",
+        "description" : "The url of this podcast on [ListenNotes.com](https://www.ListenNotes.com).",
+        "example" : "https://www.listennotes.com/c/4d3fe717742d4963a85562e9f84d8c79/"
+      },
+      "CuratedLNUrlField" : {
+        "type" : "string",
+        "description" : "The url of this curated list on [ListenNotes.com](https://www.ListenNotes.com).",
+        "example" : "https://www.listennotes.com/curated-podcasts/7-bookish-podcasts-for-avid-readers-on-H2r-TCWai8K/"
+      },
+      "BestPodcastsLNUrlField" : {
+        "type" : "string",
+        "description" : "Url of the list of best podcasts on [ListenNotes.com](https://www.ListenNotes.com).",
+        "example" : "https://www.listennotes.com/best-business-news-podcasts-95/"
+      },
+      "PublisherHighlightedField" : {
+        "type" : "string",
+        "description" : "Highlighted segment of this podcast's publisher name.",
+        "example" : "<span class=\\\"ln-search-highlight\\\">Star</span> <span class=\\\"ln-search-highlight\\\">Wars</span> Daily, by Allen Voivod"
+      },
+      "PublisherOriginalField" : {
+        "type" : "string",
+        "description" : "Plain text of this podcast's publisher name.",
+        "example" : "Star Wars Daily, by Allen Voivod"
+      },
+      "PodcastTitleHighlightedField" : {
+        "type" : "string",
+        "description" : "Highlighted segment of podcast name.",
+        "example" : "<span class=\\\"ln-search-highlight\\\">Star</span> <span class=\\\"ln-search-highlight\\\">Wars</span> 7x7 | <span class=\\\"ln-search-highlight\\\">Star</span> <span class=\\\"ln-search-highlight\\\">Wars</span> News, Interviews, and More!"
+      },
+      "PodcastTitleOriginalField" : {
+        "type" : "string",
+        "description" : "Plain text of podcast name.",
+        "example" : "Star Wars 7x7 | Star Wars News, Interviews, and More!"
+      },
+      "EpisodeDescriptionField" : {
+        "type" : "string",
+        "description" : "Html of this episode's full description",
+        "example" : "<p>Disney chief Bob Iger shared news about Star Wars movies in 2020 and beyond, but some media outlets gave conflicting reports about it. Here's the real scoop. Punch it!</p> <p>***We’re listener supported! Go to http://Patreon.com/sw7x7 to donate to the Star Wars 7x7 podcast, and you’ll get some fabulous rewards for your pledge.*** </p> <p>Check out SW7x7.com for full Star Wars 7x7 show notes and links, and to comment on any of the content of this episode! If you like what you've heard, please leave us a rating or review on iTunes or Stitcher, which will also help more people discover this Star Wars podcast.</p> <p>Don't forget to join the Star Wars 7x7 fun on Facebook at Facebook.com/SW7x7, and follow the breaking news Twitter feed at Twitter.com/SW7x7Podcast. We're also on Pinterest and Instagram as \"SW7x7\" too, and we'd love to connect with you there!</p>\n"
+      },
+      "PodcastDescriptionField" : {
+        "type" : "string",
+        "description" : "Html of this episode's full description",
+        "example" : "<p>The Star Wars 7x7 Podcast is Rebel-rousing fun for everyday Jedi, between 7 and 14 minutes a day, 7 days a week. Join host Allen Voivod for Star Wars news, history, interviews, trivia, and deep dives into the Star Wars story as told in movies, books, comics, games, cartoons, and more. Subscribe now for your daily dose of Star Wars joy. It's destiny unleashed!</p>"
+      },
+      "CuratedDescriptionField" : {
+        "type" : "string",
+        "description" : "This curated list's description.",
+        "example" : "Commuting to work is always better when you have a great new podcast to listen to, and this year, we have discovered some of our favorite podcasts yet for readers and book-lovers. These podcasts for readers entertain us and provide no shortage of new book recommendations too."
+      },
+      "CuratedSourceUrlField" : {
+        "type" : "string",
+        "description" : "Url of the source of this curated list.",
+        "example" : "https://parade.com/718913/ashley_johnson/7-bookish-podcasts-for-avid-readers-on-the-go/"
+      },
+      "CuratedSourceDomainField" : {
+        "type" : "string",
+        "description" : "The domain name of the source of this curated list.",
+        "example" : "parade.com"
+      }
+    },
+    "responses" : {
+      "NotFound" : {
+        "description" : "Endpoint not exist, or podcast / episode not exist"
+      },
+      "Unauthorized" : {
+        "description" : "Wrong api key or your account is suspended"
+      },
+      "TooManyRequests" : {
+        "description" : "You are using FREE plan and you exceed the quota limit"
+      },
+      "ServerError" : {
+        "description" : "Unexpected server errors"
+      }
+    },
+    "parameters" : {
+      "queryParam" : {
+        "name" : "q",
+        "in" : "query",
+        "description" : "Search term, e.g., person, place, topic... You can use double quotes to do verbatim match, e.g., \"game of thrones\". Otherwise, it's fuzzy search.\n",
+        "required" : true,
+        "style" : "form",
+        "explode" : true,
+        "schema" : {
+          "type" : "string",
+          "example" : "star wars"
+        }
+      },
+      "apiKeyParam" : {
+        "name" : "X-ListenAPI-Key",
+        "in" : "header",
+        "description" : "Get API Key on listennotes.com/api",
+        "required" : true,
+        "style" : "simple",
+        "explode" : false,
+        "schema" : {
+          "type" : "string"
+        }
+      },
+      "safeModeParam" : {
+        "name" : "safe_mode",
+        "in" : "query",
+        "description" : "Whether or not to exclude podcasts with explicit language. 1 is yes, and 0 is no.",
+        "required" : false,
+        "style" : "form",
+        "explode" : true,
+        "schema" : {
+          "type" : "integer",
+          "example" : 1,
+          "default" : 0,
+          "enum" : [ 0, 1 ]
+        }
+      },
+      "genreIdParam" : {
+        "name" : "genre_id",
+        "in" : "query",
+        "description" : "You can get the id from `GET /genres`. If not specified, it'll be the overall best podcasts, which can be considered as a special genre.",
+        "required" : false,
+        "style" : "form",
+        "explode" : true,
+        "schema" : {
+          "type" : "string",
+          "example" : "93"
+        }
+      }
+    },
+    "headers" : {
+      "X-ListenAPI-FreeQuota" : {
+        "description" : "Free quotas of API requests included in your api plan.",
+        "style" : "simple",
+        "explode" : false,
+        "schema" : {
+          "type" : "integer",
+          "example" : 100000
+        }
+      },
+      "X-ListenAPI-Usage" : {
+        "description" : "The number of API requests that you've used in current billing cycle.",
+        "style" : "simple",
+        "explode" : false,
+        "schema" : {
+          "type" : "integer",
+          "example" : 49231
+        }
+      },
+      "X-listenAPI-Latency-Seconds" : {
+        "description" : "Latency for this api call, in seconds.",
+        "style" : "simple",
+        "explode" : false,
+        "schema" : {
+          "type" : "number",
+          "example" : 0.056
+        }
+      },
+      "X-ListenAPI-NextBillingDate" : {
+        "description" : "The timestamp for the start of next billing cycle. In ISO 8601 format.",
+        "style" : "simple",
+        "explode" : false,
+        "schema" : {
+          "type" : "string",
+          "format" : "date-time",
+          "example" : "2019-04-26T17:27:33.110641Z"
+        }
+      }
+    }
+  }
+}
