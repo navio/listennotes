@@ -3,7 +3,7 @@ import { OperationMethods } from './client';
 import * as listenNotesURL from './listennotes.json';
 
 export interface ListennotesConfigs {
-	definition?: string | Document;
+	definition?: any;
 	withCredentials?: boolean;
 	headers?: { [header: string]: string | string[] };
 	key?: string | null;

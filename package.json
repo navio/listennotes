@@ -12,7 +12,7 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "start": "microbundle --tsconfig tsconfig.build.json",
+    "start": "microbundle",
     "dev": "microbundle watch",
     "test": "yarn start; npx jest",
     "get": "curl https://listen-api.listennotes.com/api/v2/openapi.json > listennotes.json",
